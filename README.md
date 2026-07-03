@@ -103,6 +103,10 @@ Exposed at `/metrics` and scraped by Prometheus every 5s:
 
 > The API runs gunicorn with **one worker + threads** so all counters share a single Prometheus registry (multi-worker would split counts across registries).
 
+![Grafana dashboard: prediction rate by class, p95 latency, and request status](docs/dashboard.png)
+
+*Live Grafana dashboard (`docker compose up`) — Prometheus scrapes the API's `/metrics` every 5s.*
+
 ---
 
 ## Testing & CI
