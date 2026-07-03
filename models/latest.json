@@ -1,0 +1,19 @@
+{
+  "version": "v1",
+  "artifact": "iris_logreg_v1.pkl",
+  "trained_at": "2026-07-03T17:32:36.961240+00:00",
+  "model_type": "StandardScaler+LogisticRegression",
+  "test_accuracy": 0.9333,
+  "feature_names": [
+    "sepal_length_cm",
+    "sepal_width_cm",
+    "petal_length_cm",
+    "petal_width_cm"
+  ],
+  "class_names": [
+    "setosa",
+    "versicolor",
+    "virginica"
+  ],
+  "sklearn_version": "1.9.0"
+}
