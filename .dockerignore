@@ -1,8 +1,11 @@
+.git/
+.venv/
 .env
+models/
+notebooks/
+tests/
+data/
 __pycache__/
 *.pyc
 *.pkl
-data/*.csv
-.DS_Store
-.venv/
 .pytest_cache/

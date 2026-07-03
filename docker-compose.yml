@@ -1,5 +1,4 @@
-# Phase 2 — Postgres for the Iris model's prediction log.
-# Host port 5433 (native PG 17 already owns 5432); container stays on 5432.
+# Full stack: Postgres (prediction log) + the Iris API.
 services:
   postgres:
     image: postgres:17
@@ -19,6 +18,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    build: .
+    container_name: iris-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # Talk to the DB over the compose network, not the host's 5433 mapping.
+      DB_HOST: postgres
+      DB_PORT: 5432
+    ports:
+      - "8000:8000"
 
 volumes:
   pgdata:
