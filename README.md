@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/axumweyane/iris-model/actions/workflows/ci.yml/badge.svg)](https://github.com/axumweyane/iris-model/actions/workflows/ci.yml)
 [![Python 3.14](https://img.shields.io/badge/python-3.14-blue?logo=python&logoColor=white)](https://www.python.org)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 [![License: MIT](https://img.shields.io/github/license/axumweyane/iris-model)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
