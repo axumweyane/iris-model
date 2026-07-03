@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/axumweyane/iris-model/actions/workflows/ci.yml/badge.svg)](https://github.com/axumweyane/iris-model/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.14-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![License: MIT](https://img.shields.io/github/license/axumweyane/iris-model)](LICENSE)
 
 A production-shaped machine-learning service built to demonstrate that a model isn't "done" when it's trained — it's done when it's **deployed, logged, monitored, tested, and shipped through CI**. The model itself is deliberately simple (Iris classification); the point is the operational scaffolding around it.
 
