@@ -4,6 +4,7 @@ app.py imports the record_* helpers and calls them; /metrics serves metrics_payl
 The API runs gunicorn with ONE worker + threads, so a single registry gives
 consistent counts (multi-worker would need prometheus_client multiprocess mode).
 """
+
 from __future__ import annotations
 
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST

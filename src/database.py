@@ -4,6 +4,7 @@ A thin psycopg2 wrapper over the `predictions` table (see db/init/01_predictions
 Connection settings come from the environment (.env), so the SAME code works whether
 it runs on the host (localhost:5433) or inside the compose network (postgres:5432).
 """
+
 from __future__ import annotations
 
 import os
@@ -46,9 +47,16 @@ def get_connection():
         conn.close()
 
 
-def log_prediction(features, predicted_class, *, model_version,
-                   confidence=None, latency_ms=None, request_id=None,
-                   actual_class=None):
+def log_prediction(
+    features,
+    predicted_class,
+    *,
+    model_version,
+    confidence=None,
+    latency_ms=None,
+    request_id=None,
+    actual_class=None,
+):
     """Insert one prediction and return its new id.
 
     features: a dict keyed by FEATURE_COLUMNS, or a 4-length sequence in that order.
@@ -69,10 +77,18 @@ def log_prediction(features, predicted_class, *, model_version,
         RETURNING id;
     """
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute(sql, (
-            model_version, *values,
-            predicted_class, confidence, actual_class, latency_ms, request_id,
-        ))
+        cur.execute(
+            sql,
+            (
+                model_version,
+                *values,
+                predicted_class,
+                confidence,
+                actual_class,
+                latency_ms,
+                request_id,
+            ),
+        )
         return cur.fetchone()[0]
 
 
@@ -81,17 +97,26 @@ def fetch_recent(limit=5):
     with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             "SELECT id, created_at, model_version, predicted_class, confidence, latency_ms "
-            "FROM predictions ORDER BY id DESC LIMIT %s;", (limit,))
+            "FROM predictions ORDER BY id DESC LIMIT %s;",
+            (limit,),
+        )
         return cur.fetchall()
 
 
 if __name__ == "__main__":
     # Self-test: log one dummy prediction and read it back.
     new_id = log_prediction(
-        {"sepal_length_cm": 5.1, "sepal_width_cm": 3.5,
-         "petal_length_cm": 1.4, "petal_width_cm": 0.2},
-        "setosa", model_version="db-selftest", confidence=0.97,
-        latency_ms=3.1, request_id="db-selftest-1",
+        {
+            "sepal_length_cm": 5.1,
+            "sepal_width_cm": 3.5,
+            "petal_length_cm": 1.4,
+            "petal_width_cm": 0.2,
+        },
+        "setosa",
+        model_version="db-selftest",
+        confidence=0.97,
+        latency_ms=3.1,
+        request_id="db-selftest-1",
     )
     print(f"inserted id={new_id}")
     for row in fetch_recent(3):

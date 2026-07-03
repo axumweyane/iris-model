@@ -6,6 +6,7 @@
 - Saves a versioned .pkl to models/ and writes models/latest.json, the pointer the
   serving API will read: version + artifact path + metrics + feature/class schema.
 """
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
-FEATURE_NAMES = ["sepal_length_cm", "sepal_width_cm", "petal_length_cm", "petal_width_cm"]
+FEATURE_NAMES = [
+    "sepal_length_cm",
+    "sepal_width_cm",
+    "petal_length_cm",
+    "petal_width_cm",
+]
 
 
 def next_version(models_dir: Path) -> str:
@@ -47,10 +53,12 @@ def main():
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    model = Pipeline([
-        ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(max_iter=1000)),
-    ])
+    model = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("clf", LogisticRegression(max_iter=1000)),
+        ]
+    )
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)

@@ -3,6 +3,7 @@
 Runs before any test imports `app`, so the module-level model load and API_KEY
 read succeed even on a fresh CI checkout (where .env and the .pkl are absent).
 """
+
 import os
 import sys
 import subprocess

@@ -9,6 +9,7 @@ Endpoints:
 Auth: POST /predict requires header  X-API-Key: <API_KEY>.
 The model is loaded ONCE at startup from models/latest.json.
 """
+
 from __future__ import annotations
 
 import json
@@ -52,15 +53,17 @@ def _count_requests(resp):
 
 @app.get("/")
 def index():
-    return jsonify({
-        "service": "iris-model",
-        "model_version": META["version"],
-        "endpoints": {
-            "GET /health": "status",
-            "GET /metrics": "prometheus metrics",
-            "POST /predict": "classify one flower (requires X-API-Key)",
-        },
-    })
+    return jsonify(
+        {
+            "service": "iris-model",
+            "model_version": META["version"],
+            "endpoints": {
+                "GET /health": "status",
+                "GET /metrics": "prometheus metrics",
+                "POST /predict": "classify one flower (requires X-API-Key)",
+            },
+        }
+    )
 
 
 @app.get("/health")
@@ -70,13 +73,15 @@ def health():
         database.fetch_recent(1)
     except Exception as e:
         db_ok, db_error = False, str(e)
-    return jsonify({
-        "status": "ok" if db_ok else "degraded",
-        "model_version": META["version"],
-        "model_loaded": MODEL is not None,
-        "db_ok": db_ok,
-        "db_error": db_error,
-    }), (200 if db_ok else 503)
+    return jsonify(
+        {
+            "status": "ok" if db_ok else "degraded",
+            "model_version": META["version"],
+            "model_loaded": MODEL is not None,
+            "db_ok": db_ok,
+            "db_error": db_error,
+        }
+    ), (200 if db_ok else 503)
 
 
 @app.get("/metrics")
