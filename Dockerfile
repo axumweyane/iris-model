@@ -7,15 +7,12 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Install prod deps only (binary wheels; no build toolchain needed).
 COPY requirements.txt .
 RUN pip install --only-binary=:all: -r requirements.txt
 
 COPY src/ src/
-
-# Bake a trained model into the image so it's self-contained and runnable.
 RUN python src/train.py
 
 EXPOSE 8000
-# Serve with gunicorn (2 workers). app:app is found via PYTHONPATH=/app/src.
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "2", "--timeout", "60", "app:app"]
+# One worker + threads => single Prometheus registry (consistent metric counts).
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "-w", "1", "--threads", "4", "--timeout", "60", "app:app"]

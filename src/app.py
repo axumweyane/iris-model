@@ -3,7 +3,8 @@
 Endpoints:
   GET  /         -> service info
   GET  /health   -> liveness + readiness (model loaded, DB reachable)
-  POST /predict  -> classify one flower, log the prediction, return class + confidence
+  GET  /metrics  -> Prometheus exposition
+  POST /predict  -> classify one flower, log it, record metrics, return class + confidence
 
 Auth: POST /predict requires header  X-API-Key: <API_KEY>.
 The model is loaded ONCE at startup from models/latest.json.
@@ -18,9 +19,10 @@ from pathlib import Path
 
 import joblib
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 
 import database
+import metrics
 import schema
 
 load_dotenv()
@@ -40,6 +42,14 @@ def load_model():
 MODEL, META = load_model()
 
 
+@app.after_request
+def _count_requests(resp):
+    # Count every request except scrapes of /metrics itself (keeps dashboards clean).
+    if request.endpoint != "metrics_endpoint":
+        metrics.record_request(request.endpoint, request.method, resp.status_code)
+    return resp
+
+
 @app.get("/")
 def index():
     return jsonify({
@@ -47,6 +57,7 @@ def index():
         "model_version": META["version"],
         "endpoints": {
             "GET /health": "status",
+            "GET /metrics": "prometheus metrics",
             "POST /predict": "classify one flower (requires X-API-Key)",
         },
     })
@@ -68,26 +79,35 @@ def health():
     }), (200 if db_ok else 503)
 
 
+@app.get("/metrics")
+def metrics_endpoint():
+    body, content_type = metrics.metrics_payload()
+    return Response(body, mimetype=content_type)
+
+
 @app.post("/predict")
 def predict():
     # --- auth (fail closed) ---
     if not API_KEY or request.headers.get("X-API-Key") != API_KEY:
+        metrics.record_error("auth")
         return jsonify({"error": "unauthorized"}), 401
 
     # --- parse + validate ---
     payload = request.get_json(force=True, silent=True)
     if payload is None:
+        metrics.record_error("validation")
         return jsonify({"error": "invalid or empty JSON body"}), 400
     try:
         features = schema.validate_features(payload)
     except schema.ValidationError as e:
+        metrics.record_error("validation")
         return jsonify({"error": str(e)}), 400
 
     # --- predict (timed) ---
     request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
     t0 = time.perf_counter()
     proba = MODEL.predict_proba([features])[0]
-    latency_ms = (time.perf_counter() - t0) * 1000
+    latency_s = time.perf_counter() - t0
     idx = int(proba.argmax())
     predicted_class = META["class_names"][idx]
     confidence = float(proba[idx])
@@ -100,18 +120,22 @@ def predict():
             predicted_class,
             model_version=META["version"],
             confidence=confidence,
-            latency_ms=round(latency_ms, 3),
+            latency_ms=round(latency_s * 1000, 3),
             request_id=request_id,
         )
     except Exception as e:
         log_error = str(e)
+        metrics.record_error("log")
+
+    # --- metrics ---
+    metrics.record_prediction(predicted_class, META["version"], latency_s, confidence)
 
     resp = {
         "predicted_class": predicted_class,
         "confidence": round(confidence, 4),
         "model_version": META["version"],
         "request_id": request_id,
-        "latency_ms": round(latency_ms, 3),
+        "latency_ms": round(latency_s * 1000, 3),
         "logged_id": logged_id,
     }
     if log_error:

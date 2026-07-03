@@ -1,0 +1,44 @@
+{
+  "uid": "iris-overview",
+  "title": "Iris Model — Overview",
+  "tags": ["iris", "mlops"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {"from": "now-15m", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total predictions",
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum(iris_predictions_total)"}]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Predictions / sec by class",
+      "gridPos": {"h": 6, "w": 18, "x": 6, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (predicted_class) (rate(iris_predictions_total[1m]))", "legendFormat": "{{predicted_class}}"}]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "p95 inference latency (s)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(iris_prediction_latency_seconds_bucket[5m])))", "legendFormat": "p95"}]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Request rate by status",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum by (status) (rate(iris_requests_total[1m]))", "legendFormat": "{{status}}"}]
+    }
+  ]
+}

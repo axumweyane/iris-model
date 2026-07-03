@@ -1,4 +1,4 @@
-# Full stack: Postgres (prediction log) + the Iris API.
+# Full stack: Postgres (prediction log) + Iris API + Prometheus + Grafana.
 services:
   postgres:
     image: postgres:17
@@ -28,11 +28,42 @@ services:
         condition: service_healthy
     env_file: .env
     environment:
-      # Talk to the DB over the compose network, not the host's 5433 mapping.
       DB_HOST: postgres
       DB_PORT: 5432
     ports:
       - "8000:8000"
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: iris-prometheus
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iris-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
 volumes:
   pgdata:
+  promdata:
+  grafanadata:
